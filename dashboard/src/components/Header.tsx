@@ -34,7 +34,7 @@ export default function Header() {
       : "N/A";
 
   return (
-    <header className="bg-chainlink-dark text-chainlink-light p-4 shadow-md flex justify-between items-center">
+    <header className="bg-chainlink-dark text-chainlink-light p-4 shadow-md flex justify-between items-center border-b border-b-chainlink-light-blue">
       <div className="flex items-center space-x-3">
         <img
           src={linkLogo}

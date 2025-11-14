@@ -1,4 +1,3 @@
-// dashboard/src/components/DeployVault.tsx
 import { useState } from "react";
 import {
   useWalletClient,
@@ -23,6 +22,15 @@ export function DeployVault() {
   const [defaultAdmin, setDefaultAdmin] = useState(address || "");
   const [priceSetter, setPriceSetter] = useState(address || "");
   const { addVault } = useAppStore();
+  const [copied, setCopied] = useState(false);
+  const explorerUrls: Record<number, string> = {
+    1: "https://etherscan.io",
+    11155111: "https://sepolia.etherscan.io",
+    42161: "https://arbiscan.io",
+    421614: "https://sepolia.arbiscan.io",
+    // Add more chains as needed
+  };
+  const explorerUrl = explorerUrls[chainId] || "";
   const handleDeploy = async () => {
     if (!walletClient) {
       alert("Connect wallet first");
@@ -54,6 +62,13 @@ export function DeployVault() {
       alert("Deployment failed. Check console for details.");
     } finally {
       setLoading(false);
+    }
+  };
+  const handleCopy = () => {
+    if (deployedAddress) {
+      navigator.clipboard.writeText(deployedAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
   return (
@@ -124,9 +139,25 @@ export function DeployVault() {
         </button>
       </form>
       {deployedAddress && (
-        <p className="mt-4 text-chainlink-light-blue">
-          Deployed at: {deployedAddress}
-        </p>
+        <div className="mt-4 text-chainlink-light-blue flex flex-col space-y-2">
+          <p>Deployed at: {deployedAddress}</p>
+          <button
+            onClick={handleCopy}
+            className="bg-chainlink-blue text-chainlink-light py-1 px-2 rounded hover:bg-chainlink-light-blue w-fit"
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+          {explorerUrl && (
+            <a
+              href={`${explorerUrl}/address/${deployedAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-chainlink-blue text-chainlink-light py-1 px-2 rounded hover:bg-chainlink-light-blue w-fit"
+            >
+              View in Block Explorer
+            </a>
+          )}
+        </div>
       )}
     </div>
   );
