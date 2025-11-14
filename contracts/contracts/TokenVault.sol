@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; // For safe transfers
+import "@chainlink/contracts/src/v0.8/automation/interfaces/ILogAutomation.sol";
 
 /**
  * @title IERC7540 Interface
@@ -21,7 +22,6 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return requestId Unique ID for the request.
      */
     function requestDeposit(uint256 assets, address controller, address owner) external returns (uint256 requestId);
-
     /**
      * @dev Initiates a redemption request for shares.
      * @param shares Amount of shares to redeem.
@@ -30,7 +30,6 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return requestId Unique ID for the request.
      */
     function requestRedeem(uint256 shares, address controller, address owner) external returns (uint256 requestId);
-
     /**
      * @dev Returns pending assets for a deposit request.
      * @param requestId ID of the request.
@@ -38,7 +37,6 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return assets Pending assets.
      */
     function pendingDepositRequest(uint256 requestId, address controller) external view returns (uint256 assets);
-
     /**
      * @dev Returns claimable assets for a deposit request.
      * @param requestId ID of the request.
@@ -46,7 +44,6 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return assets Claimable assets.
      */
     function claimableDepositRequest(uint256 requestId, address controller) external view returns (uint256 assets);
-
     /**
      * @dev Returns pending shares for a redemption request.
      * @param requestId ID of the request.
@@ -54,7 +51,6 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return shares Pending shares.
      */
     function pendingRedeemRequest(uint256 requestId, address controller) external view returns (uint256 shares);
-
     /**
      * @dev Returns claimable shares for a redemption request.
      * @param requestId ID of the request.
@@ -62,7 +58,6 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return shares Claimable shares.
      */
     function claimableRedeemRequest(uint256 requestId, address controller) external view returns (uint256 shares);
-
     /**
      * @dev Checks if an address is an operator for a controller.
      * @param controller Controller address.
@@ -70,7 +65,6 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return status True if approved.
      */
     function isOperator(address controller, address operator) external view returns (bool status);
-
     /**
      * @dev Sets operator approval for the caller's controller.
      * @param operator Operator address.
@@ -78,44 +72,38 @@ interface IERC7540 is IERC165, IERC4626 {
      * @return success True if successful.
      */
     function setOperator(address operator, bool approved) external returns (bool success);
-
     /**
      * @dev Emitted when a deposit request is initiated.
      */
     event DepositRequest(address indexed controller, address indexed owner, uint256 indexed requestId, address sender, uint256 assets);
-
     /**
      * @dev Emitted when a redeem request is initiated.
      */
     event RedeemRequest(address indexed controller, address indexed owner, uint256 indexed requestId, address sender, uint256 shares);
-
     /**
      * @dev Emitted when operator approval is set.
      */
     event OperatorSet(address indexed controller, address indexed operator, bool approved);
 }
-
 /**
  * @dev Enum for request statuses.
  */
 enum RECORD_STATUS {
-    UNKNOWN,    // 0: No request
-    PENDING,    // 1: Requested, awaiting fulfillment
-    CLAIMABLE,  // 2: Ready for claim (optional stage)
-    COMPLETE,   // 3: Fulfilled
-    CANCELED    // 4: Canceled
+    UNKNOWN, // 0: No request
+    PENDING, // 1: Requested, awaiting fulfillment
+    CLAIMABLE, // 2: Ready for claim (optional stage)
+    COMPLETE, // 3: Fulfilled
+    CANCELED // 4: Canceled
 }
-
 /**
  * @dev Struct for deposit/redeem requests.
  */
 struct Request {
-    address owner;     // Owner of the request
-    address receiver;  // Receiver of shares/assets
-    uint256 amount;    // Assets for deposit, shares for redeem
+    address owner; // Owner of the request
+    address receiver; // Receiver of shares/assets
+    uint256 amount; // Assets for deposit, shares for redeem
     RECORD_STATUS status; // Current status
 }
-
 /**
  * @title TokenVault
  * @author Tyler Fischer
@@ -123,65 +111,53 @@ struct Request {
  * Extends ERC4626 for vault basics, with async overrides.
  * Supports controllers, operators, fees, dynamic pricing, pausing, and freezing.
  */
-contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
+contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomation {
     using SafeERC20 for IERC20;
     using Math for uint256;
-
     /**
      * @dev Role for setting the vault price (NAV).
      */
     bytes32 public constant PRICE_SETTER_ROLE = keccak256("PRICE_SETTER_ROLE");
-
     /**
      * @dev Current price (NAV) for conversions, initialized to 1e18 (1:1).
      */
     uint256 private _price = 1e18;
-
     /**
      * @dev Mapping for pending deposits by controller.
      */
     mapping(address => Request) private _pendingDeposits;
-
     /**
      * @dev Mapping for pending redeems by controller.
      */
     mapping(address => Request) private _pendingRedeems;
-
     /**
      * @dev Mapping for operator approvals (controller => operator => bool).
      */
     mapping(address => mapping(address => bool)) private _operators;
-
     /**
      * @dev Fee in basis points (1 = 0.1%, max 1000 = 100%).
      */
     uint256 public fee = 1;
-
     /**
      * @dev Mapping for frozen accounts (cannot transfer).
      */
     mapping(address => bool) public frozenAccounts;
-
     /**
      * @dev Emitted when an account is frozen.
      */
     event AccountFrozen(address indexed account);
-
     /**
      * @dev Emitted when an account is unfrozen.
      */
     event AccountUnfrozen(address indexed account);
-
     /**
      * @dev Emitted when a deposit is canceled.
      */
     event DepositCancelled(address controller);
-
     /**
      * @dev Emitted when a redeem is canceled.
      */
     event RedeemCancelled(address controller);
-
     /**
      * @dev Interface IDs for EIP-7540 compliance.
      */
@@ -189,7 +165,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     bytes4 internal constant INTERFACE_ID_ERC7575 = 0x2f0a18c5; // If implementing share()
     bytes4 internal constant INTERFACE_ID_ASYNC_DEPOSIT = 0xce3bbe50;
     bytes4 internal constant INTERFACE_ID_ASYNC_REDEEM = 0x620ee8e4;
-
     /**
      * @dev Constructor to initialize the vault.
      * @param asset_ Underlying ERC-20 asset.
@@ -208,14 +183,13 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(PRICE_SETTER_ROLE, priceSetter);
     }
-
     /**
      * @dev Checks supported interfaces, including EIP-7540 variants.
      * @param interfaceId ID to check.
      * @return True if supported.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, IERC165) returns (bool) {
-        return 
+        return
             interfaceId == type(IERC7540).interfaceId ||
             interfaceId == INTERFACE_ID_IERC7540_OPERATORS ||
             interfaceId == INTERFACE_ID_ERC7575 ||
@@ -223,7 +197,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
             interfaceId == INTERFACE_ID_ASYNC_REDEEM ||
             super.supportsInterface(interfaceId);
     }
-
     /**
      * @dev Gets the current price (NAV).
      * @return Current price.
@@ -231,7 +204,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function getPrice() public view returns (uint256) {
         return _price;
     }
-
     /**
      * @dev Sets a new price (NAV).
      * @param newPrice New price value.
@@ -240,7 +212,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         require(newPrice > 0, "Price must be greater than 0");
         _price = newPrice;
     }
-
     /**
      * @dev Sets the fee percentage.
      * @param _fee New fee (0-1000).
@@ -249,7 +220,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         require(_fee <= 1000, "Fee cannot exceed 100%");
         fee = _fee;
     }
-
     /**
      * @dev Calculates fee for a value.
      * @param value Amount to calculate fee on.
@@ -258,7 +228,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function getPercentage(uint256 value) public view returns (uint256) {
         return (value * fee) / 1000;
     }
-
     /**
      * @dev Checks if operator is approved for controller.
      * @param controller Controller.
@@ -268,7 +237,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function isOperator(address controller, address operator) public view override returns (bool) {
         return _operators[controller][operator];
     }
-
     /**
      * @dev Returns pending assets for deposit.
      * @param controller Controller.
@@ -281,7 +249,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         }
         return 0;
     }
-
     /**
      * @dev Returns claimable assets for deposit.
      * @param controller Controller.
@@ -294,7 +261,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         }
         return 0;
     }
-
     /**
      * @dev Returns pending shares for redeem.
      * @param controller Controller.
@@ -307,7 +273,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         }
         return 0;
     }
-
     /**
      * @dev Returns claimable shares for redeem.
      * @param controller Controller.
@@ -320,7 +285,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         }
         return 0;
     }
-
     /**
      * @dev Initiates a deposit request (EIP-7540).
      * Transfers assets to vault and records pending request.
@@ -332,30 +296,22 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function requestDeposit(uint256 assets, address controller, address owner) external whenNotPaused returns (uint256 requestId) {
         if (owner == address(0)) owner = msg.sender;
         if (controller == address(0)) controller = owner;
-
         require(msg.sender == owner || isOperator(controller, msg.sender), "Not authorized");
         require(assets > 0, "Assets must be greater than 0");
         require(IERC20(asset()).balanceOf(msg.sender) >= assets, "Insufficient balance");
-
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets);
-
         // Fixed requestId = 0 (one per controller)
         requestId = 0;
-
         require(_pendingDeposits[controller].status == RECORD_STATUS.UNKNOWN, "Pending deposit exists");
-
         _pendingDeposits[controller] = Request({
             owner: owner,
             receiver: controller, // Default receiver; adjustable
             amount: assets,
             status: RECORD_STATUS.PENDING
         });
-
         emit DepositRequest(controller, owner, requestId, msg.sender, assets);
-
         return requestId;
     }
-
     /**
      * @dev Initiates a redeem request (EIP-7540).
      * Transfers shares to vault and records pending request.
@@ -367,29 +323,21 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function requestRedeem(uint256 shares, address controller, address owner) external whenNotPaused returns (uint256 requestId) {
         if (owner == address(0)) owner = msg.sender;
         if (controller == address(0)) controller = owner;
-
         require(msg.sender == owner || isOperator(controller, msg.sender), "Not authorized");
         require(shares > 0, "Shares must be greater than 0");
         require(balanceOf(owner) >= shares, "Insufficient shares");
-
         _transfer(owner, address(this), shares);
-
         requestId = 0;
-
         require(_pendingRedeems[controller].status == RECORD_STATUS.UNKNOWN, "Pending redeem exists");
-
         _pendingRedeems[controller] = Request({
             owner: owner,
             receiver: controller,
             amount: shares,
             status: RECORD_STATUS.PENDING
         });
-
         emit RedeemRequest(controller, owner, requestId, msg.sender, shares);
-
         return requestId;
     }
-
     /**
      * @dev Fulfills deposit with exact assets (admin only).
      * Mints shares after fee.
@@ -401,19 +349,13 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function deposit(uint256 assets, address receiver, address controller) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256 shares) {
         Request storage request = _pendingDeposits[controller];
         require(request.status == RECORD_STATUS.PENDING, "No pending deposit");
-
         uint256 effectiveAssets = request.amount - getPercentage(request.amount);
         shares = _convertToShares(effectiveAssets, Math.Rounding.Floor);
-
         _mint(receiver, shares);
-
         request.status = RECORD_STATUS.COMPLETE;
-
         emit Deposit(msg.sender, receiver, request.amount, shares); // caller, receiver, assets, shares
-
         return shares;
     }
-
     /**
      * @dev Fulfills deposit with exact shares (admin only).
      * Mints shares, refunds excess assets.
@@ -425,24 +367,17 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function mint(uint256 shares, address receiver, address controller) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256 assets) {
         Request storage request = _pendingDeposits[controller];
         require(request.status == RECORD_STATUS.PENDING, "No pending deposit");
-
         assets = _convertToAssets(shares, Math.Rounding.Ceil);
         require(assets <= request.amount, "Insufficient pending assets");
-
         _mint(receiver, shares);
-
         // Refund excess
         if (request.amount > assets) {
             IERC20(asset()).safeTransfer(request.owner, request.amount - assets);
         }
-
         request.status = RECORD_STATUS.COMPLETE;
-
         emit Deposit(msg.sender, receiver, assets, shares); // caller, receiver, assets, shares
-
         return assets;
     }
-
     /**
      * @dev Fulfills redeem with exact assets (admin only).
      * Burns shares, transfers assets, returns excess shares.
@@ -454,26 +389,18 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function withdraw(uint256 assets, address receiver, address controller) public onlyRole(DEFAULT_ADMIN_ROLE) override(ERC4626, IERC4626) returns (uint256 shares) {
         Request storage request = _pendingRedeems[controller];
         require(request.status == RECORD_STATUS.PENDING, "No pending redeem");
-
         shares = _convertToShares(assets, Math.Rounding.Ceil);
         require(shares <= request.amount, "Insufficient pending shares");
-
         IERC20(asset()).safeTransfer(receiver, assets);
-
         _burn(address(this), shares);
-
         // Return excess shares
         if (request.amount > shares) {
             _transfer(address(this), request.owner, request.amount - shares);
         }
-
         request.status = RECORD_STATUS.COMPLETE;
-
         emit Withdraw(msg.sender, receiver, request.owner, assets, shares); // caller, receiver, owner, assets, shares
-
         return shares;
     }
-
     /**
      * @dev Fulfills redeem with exact shares (admin only).
      * Burns shares, transfers assets, returns excess shares.
@@ -485,26 +412,17 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function redeem(uint256 shares, address receiver, address controller) public onlyRole(DEFAULT_ADMIN_ROLE) override(ERC4626, IERC4626) returns (uint256 assets) {
         Request storage request = _pendingRedeems[controller];
         require(request.status == RECORD_STATUS.PENDING, "No pending redeem");
-
         require(shares <= request.amount, "Insufficient pending shares");
-
         assets = _convertToAssets(shares, Math.Rounding.Floor);
-
         IERC20(asset()).safeTransfer(receiver, assets);
-
         _burn(address(this), shares);
-
         if (request.amount > shares) {
             _transfer(address(this), request.owner, request.amount - shares);
         }
-
         request.status = RECORD_STATUS.COMPLETE;
-
         emit Withdraw(msg.sender, receiver, request.owner, assets, shares); // caller, receiver, owner, assets, shares
-
         return assets;
     }
-
     /**
      * @dev Sets operator approval for msg.sender's controller.
      * @param operator Operator.
@@ -516,7 +434,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         emit OperatorSet(msg.sender, operator, approved);
         return true;
     }
-
     /**
      * @dev Cancels a pending deposit and refunds assets.
      * @param controller Controller of request.
@@ -525,14 +442,10 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         Request storage request = _pendingDeposits[controller];
         require(msg.sender == request.owner || isOperator(controller, msg.sender), "Not authorized");
         require(request.status == RECORD_STATUS.PENDING, "No pending deposit");
-
         IERC20(asset()).safeTransfer(request.owner, request.amount);
-
         request.status = RECORD_STATUS.CANCELED;
-
         emit DepositCancelled(controller);
     }
-
     /**
      * @dev Cancels a pending redeem and returns shares.
      * @param controller Controller of request.
@@ -541,14 +454,10 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         Request storage request = _pendingRedeems[controller];
         require(msg.sender == request.owner || isOperator(controller, msg.sender), "Not authorized");
         require(request.status == RECORD_STATUS.PENDING, "No pending redeem");
-
         _transfer(address(this), request.owner, request.amount);
-
         request.status = RECORD_STATUS.CANCELED;
-
         emit RedeemCancelled(controller);
     }
-
     /**
      * @dev Marks a deposit as claimable (admin).
      * @param controller Controller.
@@ -558,7 +467,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         require(request.status == RECORD_STATUS.PENDING, "Not pending");
         request.status = RECORD_STATUS.CLAIMABLE;
     }
-
     /**
      * @dev Marks a redeem as claimable (admin).
      * @param controller Controller.
@@ -568,7 +476,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         require(request.status == RECORD_STATUS.PENDING, "Not pending");
         request.status = RECORD_STATUS.CLAIMABLE;
     }
-
     /**
      * @dev Reverts synchronous previewDeposit (async vault).
      * @param assets Assets.
@@ -577,7 +484,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function previewDeposit(uint256 assets) public view virtual override(ERC4626, IERC4626) returns (uint256) {
         revert("Async vault: use preview after request");
     }
-
     /**
      * @dev Reverts synchronous previewMint (async vault).
      * @param shares Shares.
@@ -586,7 +492,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function previewMint(uint256 shares) public view virtual override(ERC4626, IERC4626) returns (uint256) {
         revert("Async vault: use preview after request");
     }
-
     /**
      * @dev Reverts synchronous previewWithdraw (async vault).
      * @param assets Assets.
@@ -595,7 +500,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function previewWithdraw(uint256 assets) public view virtual override(ERC4626, IERC4626) returns (uint256) {
         revert("Async vault: use preview after request");
     }
-
     /**
      * @dev Reverts synchronous previewRedeem (async vault).
      * @param shares Shares.
@@ -604,7 +508,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
     function previewRedeem(uint256 shares) public view virtual override(ERC4626, IERC4626) returns (uint256) {
         revert("Async vault: use preview after request");
     }
-
     /**
      * @dev Internal: Converts assets to shares using price.
      * @param assets Assets.
@@ -618,7 +521,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
             return assets.mulDiv(1e30, _price, Math.Rounding.Ceil);
         }
     }
-
     /**
      * @dev Internal: Converts shares to assets using price.
      * @param shares Shares.
@@ -632,21 +534,18 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
             return shares.mulDiv(_price, 1e30, Math.Rounding.Ceil);
         }
     }
-
     /**
      * @dev Pauses the contract (admin).
      */
     function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
         _pause();
     }
-
     /**
      * @dev Unpauses the contract (admin).
      */
     function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
-
     /**
      * @dev Freezes an account (admin).
      * @param account Account to freeze.
@@ -655,7 +554,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         frozenAccounts[account] = true;
         emit AccountFrozen(account);
     }
-
     /**
      * @dev Unfreezes an account (admin).
      * @param account Account to unfreeze.
@@ -664,7 +562,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         frozenAccounts[account] = false;
         emit AccountUnfrozen(account);
     }
-
     /**
      * @dev Overrides transfer to block frozen accounts.
      * @param recipient Recipient.
@@ -676,7 +573,6 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         require(!frozenAccounts[recipient], "Recipient frozen");
         return super.transfer(recipient, amount);
     }
-
     /**
      * @dev Overrides transferFrom to block frozen accounts.
      * @param sender Sender.
@@ -688,5 +584,29 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable {
         require(!frozenAccounts[sender], "Sender frozen");
         require(!frozenAccounts[recipient], "Recipient frozen");
         return super.transferFrom(sender, recipient, amount);
+    }
+    /**
+     * @dev Chainlink Automation: Check if upkeep is needed based on log.
+     */
+    function checkLog(Log calldata log, bytes memory /* checkData */) external pure override returns (bool upkeepNeeded, bytes memory performData) {
+        upkeepNeeded = true;
+        performData = abi.encode(log);
+        return (upkeepNeeded, performData);
+    }
+    /**
+     * @dev Chainlink Automation: Perform the upkeep (fulfill deposit).
+     */
+    function performUpkeep(bytes calldata performData) external override {
+        Log memory log = abi.decode(performData, (Log));
+        // Decode DepositRequest event from log.data (adjust based on event ABI)
+        (address controller, address owner, uint256 requestId, address sender, uint256 assets) = abi.decode(log.data, (address, address, uint256, address, uint256));
+        // Fulfill the deposit (use 'this' to call as internal, assuming caller has role)
+        this.deposit(assets, controller, controller);
+    }
+    /**
+     * @dev Grant role to Chainlink Automation registry (call after deployment).
+     */
+    function grantAutomationRole(address automationRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(DEFAULT_ADMIN_ROLE, automationRegistry);
     }
 }
