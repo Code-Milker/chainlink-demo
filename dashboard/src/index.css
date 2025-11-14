@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@theme {
+  --color-chainlink-blue: #0847f7; /* Primary accent */
+  --color-chainlink-dark: #0b101c; /* Dark bg */
+  --color-chainlink-light: #f8faff; /* Light text/bg */
+  --color-chainlink-light-blue: #8aa6f9; /* Subtle accents */
+}
+
+@custom-variant dark (&:where(.dark, .dark *)); /* Enables dark: prefix */
