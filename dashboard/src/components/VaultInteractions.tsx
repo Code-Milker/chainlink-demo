@@ -6,9 +6,9 @@ import {
   useWaitForTransactionReceipt,
   useAccount,
 } from "wagmi";
-import TokenVaultArtifact from "../artifacts/contracts/TokenVault.sol/TokenVault.json";
+import TokenVaultArtifact from "../assets/abis/TokenVault.json";
 
-const abi = TokenVaultArtifact.abi as const;
+const abi = TokenVaultArtifact.abi;
 
 export function VaultInteractions({
   vaultAddress,
