@@ -1,33 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./App.css";
 import Header from "./components/Header.tsx";
-import {
-  useConnectModal,
-  useAccountModal,
-  useChainModal,
-} from "@rainbow-me/rainbowkit"; // Add these hooks
+import { DeployVault } from "./components/DeployVault.tsx";
 
 function App() {
   const [count, setCount] = useState(0);
-  const { connectModalOpen } = useConnectModal();
-  const { accountModalOpen } = useAccountModal();
-  const { chainModalOpen } = useChainModal();
-
-  // Detect if any modal is open and toggle body class
-  useEffect(() => {
-    const isAnyModalOpen =
-      connectModalOpen || accountModalOpen || chainModalOpen;
-    if (isAnyModalOpen) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
-    }
-  }, [connectModalOpen, accountModalOpen, chainModalOpen]);
-
   return (
     <div className="dark:bg-chainlink-dark dark:text-chainlink-light min-h-screen">
+      {" "}
+      {/* Dark theme body */}
       <Header />
-      <div className="p-4">o (Sample content in dark mode)</div>
+      <DeployVault />
     </div>
   );
 }
