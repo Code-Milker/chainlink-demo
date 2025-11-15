@@ -89,9 +89,9 @@ export default function Dashboard({ vaults }: { vaults: string[] }) {
           <DeployVault />
         </div>
       )}
-      {selectedVault && (
-        <EventsSection vaultAddress={selectedVault as `0x${string}`} />
-      )}
+      {/* {selectedVault && ( */}
+      {/*   <EventsSection vaultAddress={selectedVault as `0x${string}`} /> */}
+      {/* )} */}
       {selectedVault && (
         <TabsSection vaultAddress={selectedVault as `0x${string}`} />
       )}
