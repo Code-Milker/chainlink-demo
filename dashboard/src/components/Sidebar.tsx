@@ -1,6 +1,5 @@
-
 // dashboard/src/components/Sidebar.tsx
-import { LayoutDashboard, BookOpen, Shield, User } from "lucide-react";
+import { LayoutDashboard, BookOpen, Shield, User, Info } from "lucide-react";
 import { useAppStore } from "../store/appStore";
 
 export default function Sidebar() {
@@ -11,6 +10,7 @@ export default function Sidebar() {
     { id: "read", label: "Read", icon: BookOpen },
     { id: "admin", label: "Admin", icon: Shield },
     { id: "user", label: "User", icon: User },
+    { id: "about", label: "About Demo", icon: Info },
   ];
 
   return (
@@ -20,7 +20,11 @@ export default function Sidebar() {
         {sections.map((section) => (
           <button
             key={section.id}
-            onClick={() => setSelectedSection(section.id as "dashboard" | "read" | "admin" | "user")}
+            onClick={() =>
+              setSelectedSection(
+                section.id as "dashboard" | "read" | "admin" | "user" | "about",
+              )
+            }
             className={`w-full flex items-center gap-3 py-3 px-4 rounded-lg text-left transition-all ${
               selectedSection === section.id
                 ? "bg-[#0847F7] text-[#F8FAFF] shadow-md"
@@ -35,4 +39,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-

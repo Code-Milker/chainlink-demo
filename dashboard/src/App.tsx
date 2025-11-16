@@ -16,6 +16,7 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "@headlessui/react";
+import AboutTab from "./components/tabs/AboutTab";
 
 function truncateAddress(address: string | undefined): string {
   if (!address) return "";
@@ -85,6 +86,7 @@ function App() {
               {selectedVault && selectedSection === "user" && (
                 <UserTab vaultAddress={selectedVault as `0x${string}`} />
               )}
+              {selectedSection === "about" && <AboutTab />}
             </div>
           </main>
         </div>
