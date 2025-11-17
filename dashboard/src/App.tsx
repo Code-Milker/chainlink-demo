@@ -4,7 +4,7 @@ import { useAppStore } from "./store/appStore";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar"; // New import
 import DashboardTab from "./components/tabs/Dashboard";
-import AdminTab from "./components/tabs/AdminTab";
+import AdminTab from "./components/tabs/admin/AdminTab";
 import UserTab from "./components/tabs/UserTab";
 import { DeployERC20 } from "./components/DeployERC20";
 import { DeployVault } from "./components/DeployVault";

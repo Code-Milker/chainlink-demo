@@ -16,7 +16,7 @@ import {
   ShieldOff,
   Shield,
 } from "lucide-react";
-import TokenVaultArtifact from "../../assets/abis/TokenVault.json";
+import TokenVaultArtifact from "../../../assets/abis/TokenVault.json";
 const abi = TokenVaultArtifact.abi;
 const PRICE_SETTER_ROLE = keccak256(toHex("PRICE_SETTER_ROLE"));
 const DEFAULT_ADMIN_ROLE =
@@ -455,7 +455,210 @@ export default function AdminTab({
               <h3 className="text-xl font-bold text-[#217B71] mb-6">
                 Fulfillment Controls
               </h3>
-              {/* ... (keep fulfillment forms as before, add prefill logic if desired) */}
+              {/* Deposit Fulfill */}
+              <div className="space-y-4 mb-8">
+                <h4 className="text-lg font-semibold text-[#F8FAFF]">
+                  Deposit Fulfill
+                </h4>
+                <input
+                  type="text"
+                  value={depositAssets}
+                  onChange={(e) => setDepositAssets(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Assets amount"
+                />
+                <input
+                  type="text"
+                  value={depositReceiver}
+                  onChange={(e) => setDepositReceiver(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Receiver address"
+                />
+                <input
+                  type="text"
+                  value={depositDelegate}
+                  onChange={(e) => setDepositDelegate(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Delegate address"
+                />
+                <button
+                  onClick={handleDepositFulfill}
+                  disabled={
+                    !depositAssets ||
+                    !depositReceiver ||
+                    !depositDelegate ||
+                    isPending
+                  }
+                  className="w-full bg-gradient-to-r from-[#217B71] to-[#4A21C2] text-[#F8FAFF] font-bold py-5 rounded-xl hover:from-[#217B71]/80 hover:to-[#4A21C2]/80 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg"
+                >
+                  {isPending ? "Confirming..." : "Fulfill Deposit"}
+                  {!isPending && <CheckCircle2 className="w-6 h-6" />}
+                </button>
+              </div>
+
+              {/* Mint Fulfill */}
+              <div className="space-y-4 mb-8">
+                <h4 className="text-lg font-semibold text-[#F8FAFF]">
+                  Mint Fulfill
+                </h4>
+                <input
+                  type="text"
+                  value={mintShares}
+                  onChange={(e) => setMintShares(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Shares amount"
+                />
+                <input
+                  type="text"
+                  value={mintReceiver}
+                  onChange={(e) => setMintReceiver(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Receiver address"
+                />
+                <input
+                  type="text"
+                  value={mintDelegate}
+                  onChange={(e) => setMintDelegate(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Delegate address"
+                />
+                <button
+                  onClick={handleMintFulfill}
+                  disabled={
+                    !mintShares || !mintReceiver || !mintDelegate || isPending
+                  }
+                  className="w-full bg-gradient-to-r from-[#217B71] to-[#4A21C2] text-[#F8FAFF] font-bold py-5 rounded-xl hover:from-[#217B71]/80 hover:to-[#4A21C2]/80 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg"
+                >
+                  {isPending ? "Confirming..." : "Fulfill Mint"}
+                  {!isPending && <CheckCircle2 className="w-6 h-6" />}
+                </button>
+              </div>
+
+              {/* Withdraw Fulfill */}
+              <div className="space-y-4 mb-8">
+                <h4 className="text-lg font-semibold text-[#F8FAFF]">
+                  Withdraw Fulfill
+                </h4>
+                <input
+                  type="text"
+                  value={withdrawAssets}
+                  onChange={(e) => setWithdrawAssets(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Assets amount"
+                />
+                <input
+                  type="text"
+                  value={withdrawReceiver}
+                  onChange={(e) => setWithdrawReceiver(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Receiver address"
+                />
+                <input
+                  type="text"
+                  value={withdrawDelegate}
+                  onChange={(e) => setWithdrawDelegate(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Delegate address"
+                />
+                <button
+                  onClick={handleWithdrawFulfill}
+                  disabled={
+                    !withdrawAssets ||
+                    !withdrawReceiver ||
+                    !withdrawDelegate ||
+                    isPending
+                  }
+                  className="w-full bg-gradient-to-r from-[#217B71] to-[#4A21C2] text-[#F8FAFF] font-bold py-5 rounded-xl hover:from-[#217B71]/80 hover:to-[#4A21C2]/80 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg"
+                >
+                  {isPending ? "Confirming..." : "Fulfill Withdraw"}
+                  {!isPending && <CheckCircle2 className="w-6 h-6" />}
+                </button>
+              </div>
+
+              {/* Redeem Fulfill */}
+              <div className="space-y-4 mb-8">
+                <h4 className="text-lg font-semibold text-[#F8FAFF]">
+                  Redeem Fulfill
+                </h4>
+                <input
+                  type="text"
+                  value={redeemShares}
+                  onChange={(e) => setRedeemShares(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Shares amount"
+                />
+                <input
+                  type="text"
+                  value={redeemReceiver}
+                  onChange={(e) => setRedeemReceiver(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Receiver address"
+                />
+                <input
+                  type="text"
+                  value={redeemDelegate}
+                  onChange={(e) => setRedeemDelegate(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Delegate address"
+                />
+                <button
+                  onClick={handleRedeemFulfill}
+                  disabled={
+                    !redeemShares ||
+                    !redeemReceiver ||
+                    !redeemDelegate ||
+                    isPending
+                  }
+                  className="w-full bg-gradient-to-r from-[#217B71] to-[#4A21C2] text-[#F8FAFF] font-bold py-5 rounded-xl hover:from-[#217B71]/80 hover:to-[#4A21C2]/80 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg"
+                >
+                  {isPending ? "Confirming..." : "Fulfill Redeem"}
+                  {!isPending && <CheckCircle2 className="w-6 h-6" />}
+                </button>
+              </div>
+
+              {/* Make Deposit Claimable */}
+              <div className="space-y-4 mb-8">
+                <h4 className="text-lg font-semibold text-[#F8FAFF]">
+                  Make Deposit Claimable
+                </h4>
+                <input
+                  type="text"
+                  value={claimDepositDelegate}
+                  onChange={(e) => setClaimDepositDelegate(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Delegate address"
+                />
+                <button
+                  onClick={handleMakeDepositClaimable}
+                  disabled={!claimDepositDelegate || isPending}
+                  className="w-full bg-gradient-to-r from-[#217B71] to-[#4A21C2] text-[#F8FAFF] font-bold py-5 rounded-xl hover:from-[#217B71]/80 hover:to-[#4A21C2]/80 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg"
+                >
+                  {isPending ? "Confirming..." : "Make Claimable"}
+                  {!isPending && <CheckCircle2 className="w-6 h-6" />}
+                </button>
+              </div>
+
+              {/* Make Redeem Claimable */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-[#F8FAFF]">
+                  Make Redeem Claimable
+                </h4>
+                <input
+                  type="text"
+                  value={claimRedeemDelegate}
+                  onChange={(e) => setClaimRedeemDelegate(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="Delegate address"
+                />
+                <button
+                  onClick={handleMakeRedeemClaimable}
+                  disabled={!claimRedeemDelegate || isPending}
+                  className="w-full bg-gradient-to-r from-[#217B71] to-[#4A21C2] text-[#F8FAFF] font-bold py-5 rounded-xl hover:from-[#217B71]/80 hover:to-[#4A21C2]/80 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg"
+                >
+                  {isPending ? "Confirming..." : "Make Claimable"}
+                  {!isPending && <CheckCircle2 className="w-6 h-6" />}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -466,7 +669,85 @@ export default function AdminTab({
               <h3 className="text-xl font-bold text-[#0847F7] mb-6">
                 Role Management
               </h3>
-              {/* ... (keep role form as before) */}
+              <div className="space-y-4">
+                <label className="flex items-center gap-1 text-sm font-medium text-[#8AA6F9] mb-2">
+                  Select Role
+                  <div className="group relative">
+                    <HelpCircle className="w-4 h-4 text-[#F7B808]/70" />
+                    <div className="absolute hidden group-hover:block bg-[#0B101C] p-2 rounded shadow-lg text-xs text-[#F2EBE0] w-48 -top-2 left-6">
+                      Choose the role to grant or revoke.
+                    </div>
+                  </div>
+                </label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] focus:border-[#0847F7] focus:outline-none text-lg"
+                >
+                  <option value={PRICE_SETTER_ROLE}>Price Setter Role</option>
+                  <option value={DEFAULT_ADMIN_ROLE}>Default Admin Role</option>
+                </select>
+
+                <label className="flex items-center gap-1 text-sm font-medium text-[#8AA6F9] mb-2">
+                  Account Address
+                  <div className="group relative">
+                    <HelpCircle className="w-4 h-4 text-[#F7B808]/70" />
+                    <div className="absolute hidden group-hover:block bg-[#0B101C] p-2 rounded shadow-lg text-xs text-[#F2EBE0] w-48 -top-2 left-6">
+                      Address to grant/revoke the role for.
+                    </div>
+                  </div>
+                </label>
+                <input
+                  type="text"
+                  value={roleAccount}
+                  onChange={(e) => setRoleAccount(e.target.value)}
+                  className="w-full px-5 py-4 bg-[#0B101C]/40 border border-[#0847F7]/50 rounded-xl text-[#F8FAFF] placeholder-[#8AA6F9]/50 focus:border-[#0847F7] focus:outline-none text-lg"
+                  placeholder="0x..."
+                />
+
+                <label className="flex items-center gap-1 text-sm font-medium text-[#8AA6F9] mb-2">
+                  Action
+                  <div className="group relative">
+                    <HelpCircle className="w-4 h-4 text-[#F7B808]/70" />
+                    <div className="absolute hidden group-hover:block bg-[#0B101C] p-2 rounded shadow-lg text-xs text-[#F2EBE0] w-48 -top-2 left-6">
+                      Choose to grant or revoke the selected role.
+                    </div>
+                  </div>
+                </label>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setGrantRevoke(true)}
+                    className={`flex-1 py-3 rounded-xl font-medium text-lg ${
+                      grantRevoke
+                        ? "bg-[#0847F7] text-[#F8FAFF]"
+                        : "bg-[#0B101C]/40 text-[#8AA6F9] border border-[#0847F7]/50"
+                    }`}
+                  >
+                    Grant
+                  </button>
+                  <button
+                    onClick={() => setGrantRevoke(false)}
+                    className={`flex-1 py-3 rounded-xl font-medium text-lg ${
+                      !grantRevoke
+                        ? "bg-[#0847F7] text-[#F8FAFF]"
+                        : "bg-[#0B101C]/40 text-[#8AA6F9] border border-[#0847F7]/50"
+                    }`}
+                  >
+                    Revoke
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleRoleAction}
+                  disabled={!roleAccount || isPending}
+                  className="w-full bg-gradient-to-r from-[#217B71] to-[#4A21C2] text-[#F8FAFF] font-bold py-5 rounded-xl hover:from-[#217B71]/80 hover:to-[#4A21C2]/80 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-lg"
+                >
+                  {isPending
+                    ? "Confirming..."
+                    : `${grantRevoke ? "Grant" : "Revoke"} Role`}
+                  {!isPending && <CheckCircle2 className="w-6 h-6" />}
+                </button>
+              </div>
             </div>
           </div>
         )}

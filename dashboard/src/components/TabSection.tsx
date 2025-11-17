@@ -1,6 +1,6 @@
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import ReadTab from "./tabs/ReadTab";
-import AdminTab from "./tabs/AdminTab";
+import AdminTab from "./tabs/admin/AdminTab";
 import UserTab from "./tabs/UserTab";
 
 export default function TabsSection({
