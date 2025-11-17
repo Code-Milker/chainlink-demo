@@ -1,4 +1,3 @@
-// dashboard/src/components/EventsSection.tsx
 import { useEffect, useState } from "react";
 import { usePublicClient, useChainId, useWatchContractEvent } from "wagmi";
 import { formatEther, decodeEventLog } from "viem";
@@ -15,9 +14,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import TokenVaultArtifact from "../../assets/abis/TokenVault.json";
-
 const abi = TokenVaultArtifact.abi;
-
 export default function DashBoardTab({
   vaultAddress,
 }: {
@@ -28,7 +25,6 @@ export default function DashBoardTab({
   const [events, setEvents] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const explorerUrls: Record<number, string> = {
     1: "https://etherscan.io",
     11155111: "https://sepolia.etherscan.io",
@@ -36,14 +32,13 @@ export default function DashBoardTab({
     421614: "https://sepolia.arbiscan.io",
   };
   const explorerUrl = explorerUrls[chainId] || "https://etherscan.io";
-
   // Fetch past events on mount
   useEffect(() => {
     if (!client) return;
     const fetchPastEvents = async () => {
       try {
         const latest = await client.getBlockNumber();
-        const fromBlock = latest - 999n; // Limit to last 1000 blocks
+        const fromBlock = latest - 9999n > 0n ? latest - 9999n : 0n; // Increased range and added safety check
         const logs = await client.getLogs({
           address: vaultAddress,
           fromBlock,
@@ -65,7 +60,6 @@ export default function DashBoardTab({
     };
     fetchPastEvents();
   }, [client, vaultAddress]);
-
   // Watch for new events
   useWatchContractEvent({
     address: vaultAddress,
@@ -81,13 +75,11 @@ export default function DashBoardTab({
       setEvents((prev) => [...decoded, ...prev]);
     },
   });
-
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   const getEventIcon = (eventName: string) => {
     switch (eventName) {
       case "Deposit":
@@ -113,7 +105,6 @@ export default function DashBoardTab({
         return <AlertCircle className="w-5 h-5 text-[#F7B808]" />;
     }
   };
-
   const formatArgs = (args: any) => {
     if (!args) return "{}";
     const formatted: any = {};
@@ -126,7 +117,6 @@ export default function DashBoardTab({
     }
     return JSON.stringify(formatted, null, 2);
   };
-
   return (
     <div className="bg-[#0B101C]/80 backdrop-blur-sm border border-[#0847F7]/30 rounded-2xl overflow-hidden shadow-2xl">
       {/* Header */}
@@ -141,7 +131,6 @@ export default function DashBoardTab({
           Real-time contract events and details
         </p>
       </div>
-
       {/* Contract Info */}
       <div className="px-8 py-6 border-b border-[#0847F7]/30">
         <div className="flex items-center justify-between">
@@ -169,7 +158,6 @@ export default function DashBoardTab({
           </div>
         </div>
       </div>
-
       <div className="p-8">
         {error && <p className="text-[#E54918] mb-4">{error}</p>}
         <div className="space-y-4">
