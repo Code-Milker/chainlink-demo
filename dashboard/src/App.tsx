@@ -3,8 +3,7 @@ import { useAccount } from "wagmi";
 import { useAppStore } from "./store/appStore";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar"; // New import
-import EventsSection from "./components/EventsSection"; // Assuming this exists
-import ReadTab from "./components/tabs/ReadTab";
+import DashboardTab from "./components/tabs/Dashboard";
 import AdminTab from "./components/tabs/AdminTab";
 import UserTab from "./components/tabs/UserTab";
 import { DeployERC20 } from "./components/DeployERC20";
@@ -17,31 +16,29 @@ import {
   ListboxOptions,
 } from "@headlessui/react";
 import AboutTab from "./components/tabs/AboutTab";
-
 function truncateAddress(address: string | undefined): string {
   if (!address) return "";
   return `${address.slice(0, 12)}...${address.slice(-8)}`;
 }
-
 function App() {
   const { address, isConnected } = useAccount();
   const { deployedVaults, selectedVault, setSelectedVault, selectedSection } =
     useAppStore();
   const userVaults = address ? deployedVaults[address] || [] : [];
   const [showDeploy, setShowDeploy] = useState(false);
-
   // Auto-select first if none
   if (!selectedVault && userVaults.length > 0) {
     setSelectedVault(userVaults[0]);
   }
-
   return (
     <div className="dark:bg-chainlink-dark dark:text-chainlink-light min-h-screen">
       <Header />
       {isConnected && userVaults.length > 0 && (
         <div className="flex min-h-screen bg-[#0B101C]">
           <Sidebar />
-          <main className="flex-1 p-8">
+          <main className="flex-1 p-8 md:pl-64">
+            {" "}
+            {/* Offset for sidebar on md+ */}
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center space-x-4 mb-6">
                 <Listbox value={selectedVault} onChange={setSelectedVault}>
@@ -75,10 +72,7 @@ function App() {
                 </div>
               )}
               {selectedVault && selectedSection === "dashboard" && (
-                <EventsSection vaultAddress={selectedVault as `0x${string}`} />
-              )}
-              {selectedVault && selectedSection === "read" && (
-                <ReadTab vaultAddress={selectedVault as `0x${string}`} />
+                <DashboardTab vaultAddress={selectedVault as `0x${string}`} />
               )}
               {selectedVault && selectedSection === "admin" && (
                 <AdminTab vaultAddress={selectedVault as `0x${string}`} />

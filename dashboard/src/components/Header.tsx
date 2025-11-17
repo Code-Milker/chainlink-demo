@@ -28,22 +28,22 @@ export default function Header() {
       ? "Loading..."
       : "N/A";
   return (
-    <header className="bg-chainlink-dark text-chainlink-light p-4 shadow-md flex justify-between items-center border-b border-b-chainlink-light-blue fixed top-0 left-0 w-full z-50">
-      <div className="flex items-center space-x-3">
+    <header className="bg-[#0B101C] text-[#F8FAFF] p-4 shadow-md flex justify-between items-center border-b border-[#0847F7]/30 fixed top-0 left-0 w-full z-50">
+      <div className="flex items-center space-x-3 pl-4">
         <img
           src={linkLogo}
           alt="Chainlink Logo"
           className="h-8 w-auto brightness-125" // Slight brightness boost for blue logo on dark bg
         />
-        <h1 className="text-2xl font-bold">Chainlink Demo Dashboard</h1>
+        <h1 className="text-2xl font-bold">Demo Dashboard</h1>
       </div>
       <div className="flex items-center space-x-4">
         {isConnected && (
           <>
-            <span className="bg-chainlink-light-blue px-3 py-1 rounded text-chainlink-dark">
+            <span className="bg-[#0847F7]/30 px-4 py-2 rounded-lg text-[#F8FAFF] flex items-center gap-2 text-sm font-medium">
               ETH: {formattedEth}
             </span>
-            <span className="bg-chainlink-light-blue px-3 py-1 rounded text-chainlink-dark">
+            <span className="bg-[#0847F7]/30 px-4 py-2 rounded-lg text-[#F8FAFF] flex items-center gap-2 text-sm font-medium">
               LINK: {formattedLink}
             </span>
           </>
