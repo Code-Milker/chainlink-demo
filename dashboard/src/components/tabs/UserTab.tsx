@@ -1,3 +1,4 @@
+// dashboard/src/components/tabs/UserTab.tsx
 import { useState } from "react";
 import {
   useReadContract,
@@ -16,10 +17,8 @@ import {
 } from "lucide-react";
 import TokenVaultArtifact from "../../assets/abis/TokenVault.json";
 import ERC20Artifact from "../../assets/abis/ERC20.json"; // Assuming you have a standard ERC20 ABI
-
 const abi = TokenVaultArtifact.abi;
 const erc20Abi = ERC20Artifact.abi; // For fetching symbol
-
 export default function UserTab({
   vaultAddress,
 }: {
@@ -27,66 +26,55 @@ export default function UserTab({
 }) {
   const { address: userAddress } = useAccount();
   const { writeContract, isPending } = useWriteContract();
-
   const [activeSection, setActiveSection] = useState<
     "deposit" | "redeem" | "delegate"
   >("deposit");
-
   // Shared delegates (avoiding "controller")
   const [delegate, setDelegate] = useState(userAddress || "");
   const [beneficiary, setBeneficiary] = useState(userAddress || "");
-
   // Form states
   const [depositAmount, setDepositAmount] = useState("");
   const [redeemAmount, setRedeemAmount] = useState("");
   const [delegateAddr, setDelegateAddr] = useState("");
   const [isApproved, setIsApproved] = useState(true);
-
   // Reads
   const { data: price } = useReadContract({
     abi,
     address: vaultAddress,
     functionName: "getPrice",
   });
-
   const { data: assetAddress } = useReadContract({
     abi,
     address: vaultAddress,
     functionName: "asset",
   });
-
   const { data: assetSymbol } = useReadContract({
     abi: erc20Abi,
     address: assetAddress,
     functionName: "symbol",
   });
-
   const { data: userAssetBalance } = useBalance({
     address: userAddress,
     token: assetAddress,
   });
-
   const { data: userShares } = useReadContract({
     abi,
     address: vaultAddress,
     functionName: "balanceOf",
     args: [userAddress!],
   });
-
   const { data: pendingDeposit } = useReadContract({
     abi,
     address: vaultAddress,
     functionName: "pendingDepositRequest",
     args: [0n, userAddress!],
   });
-
   const { data: pendingRedeem } = useReadContract({
     abi,
     address: vaultAddress,
     functionName: "pendingRedeemRequest",
     args: [0n, userAddress!],
   });
-
   const navItems = [
     {
       id: "deposit",
@@ -108,7 +96,6 @@ export default function UserTab({
       icon: <UserCheck className="w-5 h-5 text-[#4A21C2]" />,
     }, // Purple secondary
   ];
-
   const handleDeposit = () => {
     writeContract({
       abi,
@@ -122,7 +109,6 @@ export default function UserTab({
     });
     setDepositAmount("");
   };
-
   const handleRedeem = () => {
     writeContract({
       abi,
@@ -136,7 +122,6 @@ export default function UserTab({
     });
     setRedeemAmount("");
   };
-
   const handleSetDelegate = () => {
     writeContract({
       abi,
@@ -146,7 +131,6 @@ export default function UserTab({
     });
     setDelegateAddr("");
   };
-
   const handleCancelDeposit = () => {
     writeContract({
       abi,
@@ -155,7 +139,6 @@ export default function UserTab({
       args: [userAddress!], // Assuming user is controller; adjust if needed
     });
   };
-
   const handleCancelRedeem = () => {
     writeContract({
       abi,
@@ -164,10 +147,8 @@ export default function UserTab({
       args: [userAddress!],
     });
   };
-
-  const hasPendingDeposit = pendingDeposit?.gt(0);
-  const hasPendingRedeem = pendingRedeem?.gt(0);
-
+  const hasPendingDeposit = pendingDeposit ? pendingDeposit > 0n : false;
+  const hasPendingRedeem = pendingRedeem ? pendingRedeem > 0n : false;
   return (
     <div className="bg-[#0B101C]/80 backdrop-blur-sm border border-[#0847F7]/30 rounded-2xl overflow-hidden shadow-2xl">
       {" "}
@@ -249,7 +230,6 @@ export default function UserTab({
             </button>
           ))}
         </div>
-
         {/* Deposit Section */}
         {activeSection === "deposit" && (
           <div className="space-y-6">
@@ -287,7 +267,6 @@ export default function UserTab({
                     placeholder="0.00"
                   />
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="flex items-center gap-1 text-sm font-medium text-[#8AA6F9] mb-2">
@@ -328,7 +307,6 @@ export default function UserTab({
                     />
                   </div>
                 </div>
-
                 <button
                   onClick={handleDeposit}
                   disabled={!depositAmount || isPending}
@@ -341,7 +319,6 @@ export default function UserTab({
             </div>
           </div>
         )}
-
         {/* Redeem Section */}
         {activeSection === "redeem" && (
           <div className="space-y-6">
@@ -375,7 +352,6 @@ export default function UserTab({
                     placeholder="0.00"
                   />
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="flex items-center gap-1 text-sm font-medium text-[#8AA6F9] mb-2">
@@ -416,7 +392,6 @@ export default function UserTab({
                     />
                   </div>
                 </div>
-
                 <button
                   onClick={handleRedeem}
                   disabled={!redeemAmount || isPending}
@@ -429,7 +404,6 @@ export default function UserTab({
             </div>
           </div>
         )}
-
         {/* Delegate Section */}
         {activeSection === "delegate" && (
           <div className="bg-[#0B101C]/60 border border-[#4A21C2]/30 rounded-xl p-6">
@@ -462,7 +436,6 @@ export default function UserTab({
                   placeholder="0x..."
                 />
               </div>
-
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -485,7 +458,6 @@ export default function UserTab({
                   {/* Orange */}
                 </label>
               </div>
-
               <button
                 onClick={handleSetDelegate}
                 disabled={!delegateAddr || isPending}

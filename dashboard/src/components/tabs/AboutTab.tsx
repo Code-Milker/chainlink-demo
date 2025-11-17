@@ -1,4 +1,3 @@
-// dashboard/src/components/tabs/AboutTab.tsx
 import {
   Code,
   Layers,
