@@ -10,8 +10,11 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-
+import { useAppStore } from "../../store/appStore";
+import { useAccount } from "wagmi";
 export default function AboutTab() {
+  const { setSelectedSection } = useAppStore();
+  const { isConnected } = useAccount();
   return (
     <div className="bg-[#0B101C]/80 backdrop-blur-sm border border-[#0847F7]/30 rounded-2xl p-8">
       <div className="max-w-3xl mx-auto space-y-12">
@@ -25,7 +28,6 @@ export default function AboutTab() {
             ecosystem
           </p>
         </div>
-
         {/* Overview Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
@@ -38,8 +40,9 @@ export default function AboutTab() {
             <p>
               This demo illustrates a sophisticated Token Vault system for
               managing Real-World Assets (RWAs) asynchronously. Built in
-              approximately 8 hours, it demonstrates rapid prototyping
-              capabilities while integrating complex blockchain components.
+              approximately 12 hours, it demonstrates rapid prototyping
+              capabilities while integrating complex and multichain blockchain
+              components.
             </p>
             <p>
               Users deposit assets, triggering Chainlink Automation to verify
@@ -52,9 +55,38 @@ export default function AboutTab() {
               frontend, adhering to EIP-7540 for asynchronous vaults and best
               practices in blockchain development.
             </p>
+            <p>
+              The smart contracts integrate with Chainlink Automation for
+              event-triggered fulfillment of deposit and redeem requests,
+              ensuring secure and automated processing.
+            </p>
+            <p>
+              View the source code on GitHub:{" "}
+              <a
+                href="https://github.com/Code-Milker/chainlink-demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#0847F7] hover:underline"
+              >
+                https://github.com/Code-Milker/chainlink-demo
+              </a>
+              . This repository, started on November 13th, 2025, contains two
+              main components:
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                The React app: A frontend dashboard for interacting with the
+                Token Vault, including deployment, admin controls, user
+                operations, and event monitoring.
+              </li>
+              <li>
+                The contracts environment: Hardhat-based smart contracts setup
+                with the TokenVault implementation, tests, and deployment
+                scripts.
+              </li>
+            </ul>
           </div>
         </section>
-
         {/* Technology Stack */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
@@ -124,7 +156,6 @@ export default function AboutTab() {
             </div>
           </div>
         </section>
-
         {/* Key Features */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
@@ -182,7 +213,6 @@ export default function AboutTab() {
             </div>
           </div>
         </section>
-
         {/* Future Enhancements */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
@@ -209,13 +239,53 @@ export default function AboutTab() {
                 <ArrowRight className="w-4 h-4 text-[#4A21C2] mt-1" />
                 <span>Refined UI with visualizations and analytics</span>
               </li>
+              <li className="flex items-start gap-2">
+                <ArrowRight className="w-4 h-4 text-[#4A21C2] mt-1" />
+                <span>
+                  Integration with Chainlink Functions for custom computations
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <ArrowRight className="w-4 h-4 text-[#4A21C2] mt-1" />
+                <span>
+                  Support for multiple asset types and yield strategies
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <ArrowRight className="w-4 h-4 text-[#4A21C2] mt-1" />
+                <span>Multi-chain deployment and management improvements</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <ArrowRight className="w-4 h-4 text-[#4A21C2] mt-1" />
+                <span>Enhanced security audits and formal verification</span>
+              </li>
             </ul>
           </div>
         </section>
-
+        {/* Call to Action */}
+        <div className="text-center">
+          <p className="text-lg text-[#8AA6F9] mb-4">
+            To get started, deploy your token vault contract now.
+          </p>
+          <button
+            onClick={() => {
+              if (!isConnected) {
+                // Trigger wallet connection - since ConnectButton is in header, perhaps just alert or switch to deploy anyway
+                alert("Please connect your wallet first.");
+                return;
+              }
+              setSelectedSection("deploy");
+            }}
+            className="bg-gradient-to-r from-[#0847F7] to-[#8AA6F9] text-[#F8FAFF] font-bold py-3 px-6 rounded-xl hover:opacity-80 transition-opacity flex items-center gap-2 mx-auto"
+          >
+            {isConnected ? "Deploy Now" : "Connect to Deploy"}{" "}
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
         {/* Footer */}
         <div className="text-center text-sm text-[#8AA6F9]/70">
-          Built with Chainlink's ecosystem for secure, automated RWA management
+          Integrated with Chainlink's ecosystem for secure, automated RWA
+          management
         </div>
       </div>
     </div>

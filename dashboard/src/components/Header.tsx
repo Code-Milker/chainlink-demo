@@ -43,7 +43,7 @@ export default function Header() {
       </div>
       <div className="flex items-center space-x-4">
         {isConnected && (
-          <div className="text-sm text-[#8AA6F9]">
+          <div className="text-sm font-bold px-3 py-2 bg-gradient-to-r from-[#0847F7] to-[#8AA6F9] rounded-full text-white shadow-md">
             Connected Vault: {shortenedVault}
           </div>
         )}

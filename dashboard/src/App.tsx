@@ -20,7 +20,7 @@ function App() {
     selectedSection,
     setSelectedSection,
   } = useAppStore();
-  const key = address && chainId !== undefined ? `${chainId}_${address}` : '';
+  const key = address && chainId !== undefined ? `${chainId}_${address}` : "";
   const userVaults = key ? deployedVaults[key] || [] : [];
   // Auto-select/validate vault + default to about/deploy section
   useEffect(() => {
@@ -40,7 +40,7 @@ function App() {
     selectedVault,
     setSelectedVault,
     setSelectedSection,
-    chainId
+    chainId,
   ]);
   useEffect(() => {
     if (!isConnected) {

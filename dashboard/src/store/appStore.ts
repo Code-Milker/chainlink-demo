@@ -4,7 +4,13 @@ type AppState = {
   deployedERC20: { [key: string]: string[] };
   deployedVaults: { [key: string]: string[] };
   selectedVault: string | null;
-  selectedSection: "dashboard" | "admin" | "user" | "about" | "deploy";
+  selectedSection:
+    | "dashboard"
+    | "admin"
+    | "user"
+    | "about"
+    | "environment"
+    | "deploy";
   addERC20: (
     userAddress: string,
     erc20Address: string,
@@ -20,7 +26,10 @@ type AppState = {
     section: "dashboard" | "admin" | "user" | "about" | "deploy",
   ) => void;
 };
-type PersistedState = Pick<AppState, "deployedERC20" | "deployedVaults" | "selectedVault">;
+type PersistedState = Pick<
+  AppState,
+  "deployedERC20" | "deployedVaults" | "selectedVault"
+>;
 export const useAppStore = create<
   AppState,
   [["zustand/persist", PersistedState]]
