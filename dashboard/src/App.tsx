@@ -4,7 +4,7 @@ import { useAppStore } from "./store/appStore";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import DashboardTab from "./components/tabs/Dashboard";
-import AdminTab from "./components/tabs/admin/AdminTab";
+import AdminTab from "./components/tabs/AdminTab";
 import UserTab from "./components/tabs/UserTab";
 import DeployTokenVault from "./components/DeployTokenVault";
 import { useEffect } from "react";

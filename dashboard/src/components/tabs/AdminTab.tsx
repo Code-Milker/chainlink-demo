@@ -16,7 +16,7 @@ import {
   ShieldOff,
   Shield,
 } from "lucide-react";
-import TokenVaultArtifact from "../../../assets/abis/TokenVault.json";
+import TokenVaultArtifact from "../../assets/abis/TokenVault.json";
 const abi = TokenVaultArtifact.abi;
 const PRICE_SETTER_ROLE = keccak256(toHex("PRICE_SETTER_ROLE"));
 const DEFAULT_ADMIN_ROLE =
