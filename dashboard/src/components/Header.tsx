@@ -38,16 +38,6 @@ export default function Header() {
         <h1 className="text-2xl font-bold">Demo Dashboard</h1>
       </div>
       <div className="flex items-center space-x-4">
-        {isConnected && (
-          <>
-            <span className="bg-[#0847F7]/30 px-4 py-2 rounded-lg text-[#F8FAFF] flex items-center gap-2 text-sm font-medium">
-              ETH: {formattedEth}
-            </span>
-            <span className="bg-[#0847F7]/30 px-4 py-2 rounded-lg text-[#F8FAFF] flex items-center gap-2 text-sm font-medium">
-              LINK: {formattedLink}
-            </span>
-          </>
-        )}
         <ConnectButton />
       </div>
     </header>

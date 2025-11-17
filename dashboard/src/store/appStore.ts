@@ -1,10 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 type AppState = {
-  deployedVaults: { [userAddress: string]: string[] };
+  deployedVaults: { [key: string]: string[] };
   selectedVault: string | null;
   selectedSection: "dashboard" | "admin" | "user" | "about" | "deploy";
-  addVault: (userAddress: string, vaultAddress: string) => void;
+  addVault: (
+    userAddress: string,
+    vaultAddress: string,
+    chainId: number,
+  ) => void;
   setSelectedVault: (vault: string) => void;
   setSelectedSection: (
     section: "dashboard" | "admin" | "user" | "about" | "deploy",
@@ -20,13 +24,14 @@ export const useAppStore = create<
       deployedVaults: {},
       selectedVault: null,
       selectedSection: "about",
-      addVault: (userAddress, vaultAddress) => {
-        const userVaults = get().deployedVaults[userAddress] || [];
+      addVault: (userAddress, vaultAddress, chainId) => {
+        const key = `${chainId}_${userAddress}`;
+        const userVaults = get().deployedVaults[key] || [];
         if (!userVaults.includes(vaultAddress)) {
           set({
             deployedVaults: {
               ...get().deployedVaults,
-              [userAddress]: [...userVaults, vaultAddress],
+              [key]: [...userVaults, vaultAddress],
             },
           });
         }
