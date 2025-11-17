@@ -24,8 +24,8 @@ export default function AboutTab() {
             Chainlink Token Vault Demo
           </h2>
           <p className="text-xl text-[#8AA6F9]">
-            A showcase of asynchronous RWA tokenization using Chainlink's
-            ecosystem
+            A showcase of asynchronous RWA tokenization integrated with
+            Chainlink's Automation
           </p>
         </div>
         {/* Overview Section */}
