@@ -26,7 +26,7 @@ export default function DeployTokenVault() {
   const publicClient = usePublicClient();
   const { address } = useAccount();
   const chainId = useChainId();
-  const { addVault } = useAppStore();
+  const { addERC20, addVault } = useAppStore();
   const [mode, setMode] = useState<"new" | "existing">("new");
   // Token: new
   const [tokenName, setTokenName] = useState("My Token");
@@ -79,6 +79,7 @@ export default function DeployTokenVault() {
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       const addr = receipt.contractAddress!;
       setAsset(addr as `0x${string}`);
+      if (address) addERC20(address, addr, chainId);
     } catch (err) {
       console.error(err);
       alert("Token deployment failed");
@@ -372,8 +373,8 @@ export default function DeployTokenVault() {
             </div>
           </div>
         )}
+        {/* Vault Deployment */}
         {!vaultAddress && assetValid && (
-          /* Vault Deployment */
           <div className="bg-[#0B101C]/60 border border-[#0847F7]/30 rounded-xl p-6">
             <h3 className="text-xl font-bold text-[#0847F7] mb-6">
               Deploy Token Vault
@@ -498,11 +499,6 @@ export default function DeployTokenVault() {
               </div>
             </div>
           </div>
-        )}
-        {!assetValid && !asset && (
-          <p className="text-center text-[#8AA6F9] py-8">
-            Configure your deposit token above to unlock vault deployment.
-          </p>
         )}
       </div>
     </div>

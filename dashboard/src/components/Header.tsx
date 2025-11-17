@@ -1,8 +1,8 @@
-// dashboard/src/components/Header.tsx
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useBalance, useChainId } from "wagmi";
 import { formatEther } from "viem";
 import linkLogo from "../assets/chainlinkSymbol.png";
+import { useAppStore } from "../store/appStore";
 const LINK_ADDRESSES: { [key: number]: `0x${string}` } = {
   1: "0x514910771af9ca656af840dff83e8264ecf986ca", // Ethereum Mainnet
   11155111: "0x779877a7b0d9e8603169ddbd7836e478b4624789", // Ethereum Sepolia
@@ -13,6 +13,7 @@ const LINK_ADDRESSES: { [key: number]: `0x${string}` } = {
 export default function Header() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  const { selectedVault } = useAppStore();
   const shortenedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
@@ -27,6 +28,9 @@ export default function Header() {
     : linkAddress
       ? "Loading..."
       : "N/A";
+  const shortenedVault = selectedVault
+    ? `${selectedVault.slice(0, 6)}...${selectedVault.slice(-4)}`
+    : "No Vault Selected";
   return (
     <header className="bg-[#0B101C] text-[#F8FAFF] p-4 shadow-md flex justify-between items-center border-b border-[#0847F7]/30 fixed top-0 left-0 w-full z-50">
       <div className="flex items-center space-x-3 pl-4">
@@ -38,6 +42,11 @@ export default function Header() {
         <h1 className="text-2xl font-bold">Demo Dashboard</h1>
       </div>
       <div className="flex items-center space-x-4">
+        {isConnected && (
+          <div className="text-sm text-[#8AA6F9]">
+            Connected Vault: {shortenedVault}
+          </div>
+        )}
         <ConnectButton />
       </div>
     </header>

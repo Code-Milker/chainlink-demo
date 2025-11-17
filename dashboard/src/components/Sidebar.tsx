@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   BookOpen,
@@ -5,14 +6,15 @@ import {
   User,
   Info,
   Code,
+  Globe,
 } from "lucide-react";
 import { useAppStore } from "../store/appStore";
 import { useAccount, useChainId } from "wagmi";
 export default function Sidebar() {
   const { isConnected, address } = useAccount();
-  const chainId = useChainId();
+  const chainId: number | undefined = useChainId();
   const { deployedVaults, selectedSection, setSelectedSection } = useAppStore();
-  const userVaults = address
+  const userVaults = address && chainId !== undefined
     ? deployedVaults[`${chainId}_${address}`] || []
     : [];
   const sections = [
@@ -21,6 +23,7 @@ export default function Sidebar() {
     { id: "admin", label: "Admin Controls", icon: Shield },
     { id: "user", label: "User Controls", icon: User },
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "environment", label: "Environment", icon: Globe },
   ];
   return (
     <aside className="hidden md:block w-64 bg-[#0B101C] border-r border-[#0847F7]/30 h-screen p-6 space-y-4 fixed top-0 left-0 overflow-y-auto z-0">
@@ -30,7 +33,7 @@ export default function Sidebar() {
             (!isConnected && section.id !== "about") ||
             (isConnected &&
               userVaults.length === 0 &&
-              ["admin", "user", "dashboard"].includes(section.id));
+              ["admin", "user", "dashboard", "environment"].includes(section.id));
           return (
             <button
               key={section.id}
@@ -42,7 +45,8 @@ export default function Sidebar() {
                     | "admin"
                     | "user"
                     | "about"
-                    | "deploy",
+                    | "deploy"
+                    | "environment",
                 );
               }}
               disabled={disabled}
@@ -63,3 +67,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

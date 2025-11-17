@@ -1,3 +1,4 @@
+// dashboard/src/App.tsx
 import { useAccount, useChainId } from "wagmi";
 import { useAppStore } from "./store/appStore";
 import Header from "./components/Header";
@@ -6,11 +7,12 @@ import DashboardTab from "./components/tabs/Dashboard";
 import AdminTab from "./components/tabs/AdminTab";
 import UserTab from "./components/tabs/UserTab";
 import DeployTokenVault from "./components/DeployTokenVault";
+import EnvironmentTab from "./components/tabs/Environment";
 import { useEffect } from "react";
 import AboutTab from "./components/tabs/AboutTab";
 function App() {
   const { address, isConnected } = useAccount();
-  const chainId = useChainId();
+  const chainId: number | undefined = useChainId();
   const {
     deployedVaults,
     selectedVault,
@@ -18,11 +20,11 @@ function App() {
     selectedSection,
     setSelectedSection,
   } = useAppStore();
-  const key = address ? `${chainId}_${address}` : "";
+  const key = address && chainId !== undefined ? `${chainId}_${address}` : '';
   const userVaults = key ? deployedVaults[key] || [] : [];
   // Auto-select/validate vault + default to about/deploy section
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && chainId !== undefined) {
       const vaults = deployedVaults[`${chainId}_${address}`] ?? [];
       if (vaults.length > 0) {
         if (!selectedVault || !vaults.includes(selectedVault)) {
@@ -38,7 +40,7 @@ function App() {
     selectedVault,
     setSelectedVault,
     setSelectedSection,
-    chainId,
+    chainId
   ]);
   useEffect(() => {
     if (!isConnected) {
@@ -64,6 +66,7 @@ function App() {
                 {selectedVault && selectedSection === "user" && (
                   <UserTab vaultAddress={selectedVault as `0x${string}`} />
                 )}
+                {selectedSection === "environment" && <EnvironmentTab />}
                 {selectedSection === "about" && <AboutTab />}
               </>
             ) : (
