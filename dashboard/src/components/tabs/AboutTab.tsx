@@ -285,7 +285,7 @@ export default function AboutTab() {
         {/* Footer */}
         <div className="text-center text-sm text-[#8AA6F9]/70">
           Integrated with Chainlink's ecosystem for secure, automated RWA
-          management
+          management. Built by Ty Fischer.
         </div>
       </div>
     </div>

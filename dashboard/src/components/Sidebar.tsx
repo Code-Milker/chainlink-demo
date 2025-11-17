@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   BookOpen,
@@ -14,15 +13,16 @@ export default function Sidebar() {
   const { isConnected, address } = useAccount();
   const chainId: number | undefined = useChainId();
   const { deployedVaults, selectedSection, setSelectedSection } = useAppStore();
-  const userVaults = address && chainId !== undefined
-    ? deployedVaults[`${chainId}_${address}`] || []
-    : [];
+  const userVaults =
+    address && chainId !== undefined
+      ? deployedVaults[`${chainId}_${address}`] || []
+      : [];
   const sections = [
     { id: "about", label: "Welcome", icon: Info },
     { id: "deploy", label: "Deployment Controls", icon: Code },
     { id: "admin", label: "Admin Controls", icon: Shield },
     { id: "user", label: "User Controls", icon: User },
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "dashboard", label: "Events", icon: LayoutDashboard },
     { id: "environment", label: "Environment", icon: Globe },
   ];
   return (
@@ -33,7 +33,9 @@ export default function Sidebar() {
             (!isConnected && section.id !== "about") ||
             (isConnected &&
               userVaults.length === 0 &&
-              ["admin", "user", "dashboard", "environment"].includes(section.id));
+              ["admin", "user", "dashboard", "environment"].includes(
+                section.id,
+              ));
           return (
             <button
               key={section.id}
@@ -67,4 +69,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-
