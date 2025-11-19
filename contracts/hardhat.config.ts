@@ -3,10 +3,17 @@ import { configVariable, defineConfig } from "hardhat/config";
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin],
+
   solidity: {
     profiles: {
       default: {
         version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       production: {
         version: "0.8.28",
@@ -23,6 +30,8 @@ export default defineConfig({
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1",
+      // Optional: If optimizer doesn't fix it, un-comment below for local testing only
+      // allowUnlimitedContractSize: true
     },
     hardhatOp: {
       type: "edr-simulated",
