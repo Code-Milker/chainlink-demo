@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; // For safe transfers
 import "@chainlink/contracts/src/v0.8/automation/interfaces/ILogAutomation.sol";
-
 /**
  * @title IERC7540 Interface
  * @dev Interface for asynchronous deposit and redemption requests as per EIP-7540.
@@ -118,6 +116,10 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
      * @dev Role for setting the vault price (NAV).
      */
     bytes32 public constant PRICE_SETTER_ROLE = keccak256("PRICE_SETTER_ROLE");
+    /**
+     * @dev Role for Chainlink keepers to perform upkeep.
+     */
+    bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
     /**
      * @dev Current price (NAV) for conversions, initialized to 1e18 (1:1).
      */
@@ -339,22 +341,34 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
         return requestId;
     }
     /**
-     * @dev Fulfills deposit with exact assets (admin only).
+     * @dev Internal: Fulfills deposit with exact assets.
      * Mints shares after fee.
      * @param assets Assets to convert.
      * @param receiver Shares receiver.
      * @param controller Controller of request.
      * @return shares Minted shares.
      */
-    function deposit(uint256 assets, address receiver, address controller) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256 shares) {
+    function _deposit(uint256 assets, address receiver, address controller) internal returns (uint256 shares) {
         Request storage request = _pendingDeposits[controller];
         require(request.status == RECORD_STATUS.PENDING, "No pending deposit");
+        require(assets == request.amount, "Mismatched assets amount");
         uint256 effectiveAssets = request.amount - getPercentage(request.amount);
         shares = _convertToShares(effectiveAssets, Math.Rounding.Floor);
         _mint(receiver, shares);
         request.status = RECORD_STATUS.COMPLETE;
+        delete _pendingDeposits[controller];
         emit Deposit(msg.sender, receiver, request.amount, shares); // caller, receiver, assets, shares
         return shares;
+    }
+    /**
+     * @dev Fulfills deposit with exact assets (admin only).
+     * @param assets Assets to convert.
+     * @param receiver Shares receiver.
+     * @param controller Controller of request.
+     * @return shares Minted shares.
+     */
+    function deposit(uint256 assets, address receiver, address controller) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256 shares) {
+        return _deposit(assets, receiver, controller);
     }
     /**
      * @dev Fulfills deposit with exact shares (admin only).
@@ -375,6 +389,7 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
             IERC20(asset()).safeTransfer(request.owner, request.amount - assets);
         }
         request.status = RECORD_STATUS.COMPLETE;
+        delete _pendingDeposits[controller];
         emit Deposit(msg.sender, receiver, assets, shares); // caller, receiver, assets, shares
         return assets;
     }
@@ -398,6 +413,7 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
             _transfer(address(this), request.owner, request.amount - shares);
         }
         request.status = RECORD_STATUS.COMPLETE;
+        delete _pendingRedeems[controller];
         emit Withdraw(msg.sender, receiver, request.owner, assets, shares); // caller, receiver, owner, assets, shares
         return shares;
     }
@@ -420,6 +436,7 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
             _transfer(address(this), request.owner, request.amount - shares);
         }
         request.status = RECORD_STATUS.COMPLETE;
+        delete _pendingRedeems[controller];
         emit Withdraw(msg.sender, receiver, request.owner, assets, shares); // caller, receiver, owner, assets, shares
         return assets;
     }
@@ -444,6 +461,7 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
         require(request.status == RECORD_STATUS.PENDING, "No pending deposit");
         IERC20(asset()).safeTransfer(request.owner, request.amount);
         request.status = RECORD_STATUS.CANCELED;
+        delete _pendingDeposits[controller];
         emit DepositCancelled(controller);
     }
     /**
@@ -456,6 +474,7 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
         require(request.status == RECORD_STATUS.PENDING, "No pending redeem");
         _transfer(address(this), request.owner, request.amount);
         request.status = RECORD_STATUS.CANCELED;
+        delete _pendingRedeems[controller];
         emit RedeemCancelled(controller);
     }
     /**
@@ -596,17 +615,20 @@ contract TokenVault is ERC4626, IERC7540, AccessControl, Pausable, ILogAutomatio
     /**
      * @dev Chainlink Automation: Perform the upkeep (fulfill deposit).
      */
-    function performUpkeep(bytes calldata performData) external override {
+    function performUpkeep(bytes calldata performData) external onlyRole(KEEPER_ROLE) override {
         Log memory log = abi.decode(performData, (Log));
-        // Decode DepositRequest event from log.data (adjust based on event ABI)
-        (address controller, address owner, uint256 requestId, address sender, uint256 assets) = abi.decode(log.data, (address, address, uint256, address, uint256));
-        // Fulfill the deposit (use 'this' to call as internal, assuming caller has role)
-        this.deposit(assets, controller, controller);
+        bytes32[] memory topics = log.topics;
+        address controller = address(uint160(uint256(topics[1])));
+        address owner = address(uint160(uint256(topics[2])));
+        uint256 requestId = uint256(topics[3]);
+        (address sender, uint256 assets) = abi.decode(log.data, (address, uint256));
+        // Optionally validate owner/requestId/sender if needed
+        _deposit(assets, controller, controller);
     }
     /**
      * @dev Grant role to Chainlink Automation registry (call after deployment).
      */
-    function grantAutomationRole(address automationRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(DEFAULT_ADMIN_ROLE, automationRegistry);
+    function grantKeeperRole(address keeperRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(KEEPER_ROLE, keeperRegistry);
     }
 }
