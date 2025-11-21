@@ -1,13 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it, before } from "node:test";
 import { network } from "hardhat";
-import {
-  encodeAbiParameters,
-  keccak256,
-  parseAbiParameters,
-  parseEther,
-  toHex,
-} from "viem";
+import { keccak256, parseEther, toHex } from "viem";
 import { MyERC20$Type } from "../artifacts/contracts/ERC20.sol/artifacts.js";
 import { TokenVault$Type } from "../artifacts/contracts/TokenVault.sol/artifacts.js";
 import { GetContractReturnType } from "@nomicfoundation/hardhat-viem/types";
